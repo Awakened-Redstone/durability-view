@@ -1,0 +1,11 @@
+{
+  "category.durability-view.general": "General",
+  "category.durability-view.whitelist": "Whitelist",
+  "category.durability-view.blacklist": "Blacklist",
+
+  "option.durability-view.mode": "Display mode",
+  "option.durability-view.blacklist": "Blacklisted items",
+  "option.durability-view.whitelist": "Whitelisted items",
+
+  "item.durabilityPercent": "Durability %s%%"
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "durability-view",
+  "version": "${version}",
+  "name": "Awakened's durability view mod",
+  "description": "A simple durability view mod on tooltips",
+  "authors": [
+    "Awakened Redstone"
+  ],
+  "contact": {
+    "homepage": "",
+    "sources": ""
+  },
+  "license": "LGPL-3.0",
+  "icon": "assets/durability-view/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.awakenedredstone.durabilityview.DurabilityView"
+    ],
+    "modmenu": [ "com.awakenedredstone.durabilityview.config.ModMenuIntegration" ]
+  },
+  "mixins": [
+    "durability-view.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.9",
+    "fabric-api": "*",
+    "minecraft": "~1.19.2"
+  }
+}

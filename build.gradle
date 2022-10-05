@@ -1,0 +1,120 @@
+import com.modrinth.minotaur.dependencies.ModDependency
+import net.fabricmc.loom.task.RemapJarTask
+
+plugins {
+	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id "com.modrinth.minotaur" version "2.+"
+	id 'maven-publish'
+}
+
+def CHANGELOG = new File('CHANGELOG.md').exists() ? new File('CHANGELOG.md').text : "No changelog provided"
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	maven {
+		name "ClothConfigAPI"
+		url "https://maven.shedaniel.me/"
+	}
+	maven {
+		name "ModMenu"
+		url "https://maven.terraformersmc.com/releases/"
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}"}
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}
+
+task remapMavenJar(type: RemapJarTask, dependsOn: jar) {
+	input = jar.archiveFile
+	archiveFileName = "${archivesBaseName}-${project.version}-maven.jar"
+	addNestedDependencies = false
+}
+
+tasks.modrinth.dependsOn(tasks.remapMavenJar)
+
+modrinth {
+	String projectVersion = project.version.toString();
+	List<String> projectVersionNumber = projectVersion.split("-", 2)
+	String projectVersionName = "Release ${projectVersionNumber[0]}"
+	if (projectVersion.contains("beta")) {
+		List<String> projectBeta = projectVersionNumber[1].split("[.]", 2)
+		projectVersionName = "${projectVersionNumber[0]} - Beta ${projectBeta[1]}"
+		versionType = "beta"
+	} else if (projectVersion.contains("alpha")) {
+		List<String> projectAlpha = projectVersionNumber[1].split("[.]", 2)
+		projectVersionName = "${projectVersionNumber[0]} - Alpha ${projectAlpha[1]}"
+		versionType = "alpha"
+	} else if (projectVersion.contains("rc")) {
+		List<String> projectRC = projectVersionNumber[1].split("[.]", 2)
+		projectVersionName = "${projectVersionNumber[0]} - Release Candidate ${projectRC[1]}"
+		versionType = "beta"
+	}
+
+	token = System.getenv().MODRINTH_TOKEN
+	projectId = "VqrLRUE8"
+	versionName = projectVersionName
+	changelog = CHANGELOG
+	uploadFile = remapJar
+	dependencies = [
+			new ModDependency("fabric-api", "required"),
+			new ModDependency("modmenu", "optional"),
+			new ModDependency("cloth-config", "optional")
+	]
+}
